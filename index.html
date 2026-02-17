@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Smart Reader Pro</title>
 
-    <link rel="icon" type="image/png" href="icon.png?v=99">
-    <link rel="apple-touch-icon" href="icon.png?v=99">
+    <link rel="icon" type="image/png" href="reader.png?v=1.1">
+    <link rel="apple-touch-icon" href="reader.png?v=1.1">
+    
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SmartReader">
 
     <style>
         body {
@@ -18,6 +20,7 @@
             background: #0f0f0f;
             color: #ffffff;
             transition: background 0.3s;
+            -webkit-tap-highlight-color: transparent;
         }
 
         /* Modern App Header */
@@ -36,6 +39,7 @@
             margin-right: 12px;
             object-fit: cover;
             border: 1px solid #444;
+            background: #222;
         }
 
         .app-title {
@@ -60,7 +64,7 @@
         }
 
         button {
-            padding: 10px 16px;
+            padding: 12px 16px;
             border-radius: 10px;
             border: none;
             cursor: pointer;
@@ -70,7 +74,7 @@
             color: #eee;
             transition: all 0.2s ease;
             flex-grow: 1;
-            max-width: 120px;
+            max-width: 140px;
         }
 
         button:active { transform: scale(0.92); }
@@ -83,13 +87,13 @@
             display: flex;
             align-items: center;
             background: #252525;
-            padding: 8px 12px;
-            border-radius: 8px;
+            padding: 10px 15px;
+            border-radius: 10px;
             margin-top: 5px;
         }
 
-        .label-text { font-size: 12px; color: #aaa; min-width: 50px; }
-        input[type="range"] { flex-grow: 1; margin: 0 10px; }
+        .label-text { font-size: 12px; color: #aaa; min-width: 50px; font-weight: bold; }
+        input[type="range"] { flex-grow: 1; margin: 0 10px; cursor: pointer; }
 
         #textInput {
             width: 100%;
@@ -98,10 +102,11 @@
             padding: 15px;
             box-sizing: border-box;
             background: #111;
-            color: #999;
+            color: #ccc;
             border: none;
             outline: none;
             border-bottom: 2px solid #333;
+            resize: none;
         }
 
         #textDisplay {
@@ -117,21 +122,24 @@
             scroll-behavior: smooth;
         }
 
-        .sentence { cursor: pointer; transition: 0.2s; border-radius: 5px; display: inline; }
+        .sentence { cursor: pointer; transition: 0.2s; border-radius: 5px; display: inline; padding: 2px 4px; }
         .highlight { background: rgba(66, 133, 244, 0.4); color: #fff; border-bottom: 3px solid #4285F4; }
 
+        /* Light Mode Switch */
         .white-mode { background: #ffffff !important; color: #111 !important; }
         .white-mode .app-header, .white-mode #toolbar { background: #f0f0f0; border-color: #ccc; }
         .white-mode button { background: #ddd; color: #333; }
         .white-mode .slider-box { background: #e0e0e0; }
+        .white-mode #textInput { background: #fff; color: #444; border-color: #eee; }
 
         /* 📖 Immersive Reader Mode */
         .immersive .app-header, .immersive #toolbar, .immersive #textInput { display: none !important; }
         .immersive #textDisplay {
             height: 100vh;
-            font-size: 40px;
+            font-size: 38px;
             padding: 50px 30px;
             background: #000;
+            color: #eee;
         }
 
         #exitBtn {
@@ -156,7 +164,7 @@
 <button id="exitBtn" onclick="exitImmersive()">EXIT ❌</button>
 
 <div class="app-header">
-    <img src="icon.png?v=99" alt="Logo" class="app-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3767/3767084.png'">
+    <img src="reader.png?v=1.1" alt="Logo" class="app-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3767/3767084.png'">
     <h2 class="app-title">Smart Reader Pro</h2>
 </div>
 
@@ -180,8 +188,8 @@
     </div>
 </div>
 
-<textarea id="textInput" placeholder="Yahan apna text paste karein...">
-In most situations there's nothing to deal with except your own fears and desires. Fear and desire make everything seem complicated. If you don't have fear or desire about an event, there’s really nothing to deal with.
+<textarea id="textInput" placeholder="अपना टेक्स्ट यहाँ पेस्ट करें...">
+You will be surprised to find that in most situations there's nothing to deal with except your own fears and desires. Fear and desire make everything seem complicated.
 </textarea>
 
 <div id="textDisplay"></div>
@@ -196,17 +204,20 @@ In most situations there's nothing to deal with except your own fears and desire
     // Load voices correctly
     function getHindiVoice() {
         let voices = synth.getVoices();
-        let hindiVoice = voices.find(v => v.lang.toLowerCase().includes("hi"));
+        // Priority to Hindi, else default
+        let hindiVoice = voices.find(v => v.lang.toLowerCase().includes("hi-in") || v.lang.toLowerCase().includes("hi"));
         return hindiVoice || voices[0];
     }
 
     function splitSentences(text) {
+        // Splitting by dots, exclamation and question marks
         let arr = text.match(/[^\.!\?]+[\.!\?]+/g);
         return arr ? arr : [text];
     }
 
     function renderText() {
         let text = document.getElementById("textInput").value.trim();
+        if(!text) return;
         sentences = splitSentences(text);
         let html = "";
         sentences.forEach((s, i) => {
@@ -255,6 +266,7 @@ In most situations there's nothing to deal with except your own fears and desire
         let current = document.getElementById("s" + index);
         if (current) {
             current.classList.add("highlight");
+            // Auto scroll to current sentence
             current.scrollIntoView({ behavior: "smooth", block: "center" });
         }
     }
@@ -262,9 +274,18 @@ In most situations there's nothing to deal with except your own fears and desire
     function pauseText() { if (synth.speaking) { synth.pause(); isPaused = true; } }
     function resumeText() { if (synth.paused) { synth.resume(); isPaused = false; } }
     function stopText() { synth.cancel(); isPaused = false; }
-    function clearText() { stopText(); document.getElementById("textInput").value = ""; document.getElementById("textDisplay").innerHTML = ""; }
+    
+    function clearText() { 
+        stopText(); 
+        document.getElementById("textInput").value = ""; 
+        document.getElementById("textDisplay").innerHTML = ""; 
+    }
+    
     function toggleDark() { document.body.classList.toggle("white-mode"); }
-    function changeZoom() { document.getElementById("textDisplay").style.fontSize = document.getElementById("zoomControl").value + "px"; }
+    
+    function changeZoom() { 
+        document.getElementById("textDisplay").style.fontSize = document.getElementById("zoomControl").value + "px"; 
+    }
     
     function enterImmersive() {
         document.body.classList.add("immersive");
@@ -276,11 +297,14 @@ In most situations there's nothing to deal with except your own fears and desire
         if (document.fullscreenElement) document.exitFullscreen();
     }
 
-    // Fixed: Initial Load
-    window.onload = renderText;
-    if (speechSynthesis.onvoiceschanged !== undefined) {
-        speechSynthesis.onvoiceschanged = getHindiVoice;
-    }
+    // Initial load logic
+    window.onload = function() {
+        renderText();
+        // Fixing speech synthesis voice loading bug in some browsers
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = getHindiVoice;
+        }
+    };
 </script>
 
 </body>
