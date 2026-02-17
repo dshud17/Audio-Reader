@@ -3,58 +3,243 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Khata-Pro</title>
-    
+    <title>Smart Reader Pro</title>
+
+    <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
-    <link rel="icon" href="icon.png" type="image/png">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Khata-Pro">
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* पुराना स्टाइल यहाँ रहेगा (वही जो पहले था) */
-        :root { --primary: #4285F4; --success: #34A853; --bg: #f8fafc; --red: #EA4335; }
-        body { margin: 0; padding: 10px; background: var(--bg); font-family: 'Segoe UI', sans-serif; color: #1e293b; }
-        .app-title { text-align: center; font-size: 1.4rem; font-weight: 800; color: var(--primary); margin: 10px 0; letter-spacing: 1px; }
-        .card { background: white; padding: 15px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 12px; }
-        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-        .summary-card { padding: 15px; border-radius: 12px; text-align: center; color: white; }
-        .month-card { background: linear-gradient(135deg, #4285F4, #2563eb); }
-        .year-card { background: linear-gradient(135deg, #34A853, #16a34a); }
-        .val { font-size: 1.2rem; font-weight: bold; margin-top: 4px; }
-        .label { font-size: 0.7rem; font-weight: 600; opacity: 0.9; text-transform: uppercase; }
-        .input-row { display: flex; gap: 8px; margin-bottom: 8px; }
-        input { flex: 1; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 15px; outline: none; }
-        .save-btn { flex: 1; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        .rem-btn { flex: 0.8; padding: 14px; background: white; color: var(--red); border: 2px solid var(--red); border-radius: 10px; font-weight: bold; font-size: 13px; }
-        .charts-section { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; height: 140px; }
-        .chart-title { font-size: 0.65rem; font-weight: bold; color: #64748b; text-align: center; margin-bottom: 5px; }
-        .history-table { width: 100%; border-collapse: collapse; }
-        .history-table td { padding: 12px 5px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
-        .btn-act { color: var(--primary); background: none; border: none; font-size: 11px; font-weight: bold; margin-left: 10px; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #111;
+            color: white;
+            transition: 0.3s;
+        }
+
+        /* Header with Logo */
+        .app-header {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #1e1e1e;
+            border-bottom: 1px solid #333;
+        }
+
+        .app-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            margin-right: 12px;
+            object-fit: cover;
+        }
+
+        h2 { margin: 0; font-size: 1.2rem; letter-spacing: 1px; color: #4285F4; }
+
+        #toolbar {
+            padding: 15px;
+            background: #1e1e1e;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        button {
+            padding: 10px 14px;
+            margin: 4px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            background: #333;
+            color: white;
+            transition: 0.2s;
+        }
+
+        button:active { transform: scale(0.95); }
+        .btn-play { background: #4285F4; }
+        .btn-stop { background: #EA4335; }
+
+        #textDisplay {
+            width: 100%;
+            height: calc(100vh - 350px);
+            font-size: 30px;
+            font-weight: 800;
+            line-height: 1.6;
+            padding: 20px;
+            box-sizing: border-box;
+            white-space: pre-wrap;
+            overflow: auto;
+        }
+
+        .sentence { cursor: pointer; border-radius: 4px; padding: 2px 0; }
+        .highlight { background: #4285F4; color: white; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+
+        .dark-mode { background: #f4f4f4; color: #111; }
+        .dark-mode #toolbar, .dark-mode .app-header { background: #ddd; border-color: #ccc; }
+        .dark-mode button { background: #bbb; color: #000; }
+
+        /* 🔥 Immersive Mode */
+        .immersive .app-header,
+        .immersive #toolbar,
+        .immersive #textInput {
+            display: none;
+        }
+
+        .immersive #textDisplay {
+            height: 100vh;
+            font-size: 42px;
+            padding: 60px 30px;
+            background: #000;
+        }
+
+        #exitBtn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #EA4335;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 50px;
+            font-weight: bold;
+            z-index: 2000;
+            box-shadow: 0 4px 15px rgba(234,67,53,0.4);
+        }
+
+        .immersive #exitBtn { display: block; }
+        
+        .control-label { font-size: 12px; color: #888; margin-left: 10px; }
+        input[type="range"] { vertical-align: middle; }
     </style>
 </head>
-<body>
-    <div class="app-title">KHATA-PRO</div>
-    <div class="summary-grid">
-        <div class="summary-card month-card"><div id="monthLabel" class="label">Month</div><div class="val" id="monthTotal">₹0</div></div>
-        <div class="summary-card year-card"><div id="yearLabel" class="label">Year</div><div class="val" id="yearTotal">₹0</div></div>
-    </div>
-    <div class="card">
-        <div class="input-row"><input type="text" id="description" placeholder="Description"><input type="number" id="amount" placeholder="₹"></div>
-        <div class="input-row"><input type="text" id="category" placeholder="Category" list="cat-list"><input type="time" id="reminderTime" style="flex: 0.5;"></div>
-        <div class="input-row"><button onclick="handleSave()" id="saveBtn" class="save-btn">SAVE ENTRY</button><button onclick="setGoogleReminder()" class="rem-btn">⏰ REMIND</button></div>
-    </div>
-    <div class="card"><div class="charts-section">
-        <div><div class="chart-title">THIS MONTH</div><div style="height:100%"><canvas id="monthChart"></canvas></div></div>
-        <div><div class="chart-title">THIS YEAR</div><div style="height:100%"><canvas id="yearChart"></canvas></div></div>
-    </div></div>
-    <div class="card" style="margin-bottom: 50px;"><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><b>📜 History</b><small onclick="downloadExcel()" style="color:blue">EXCEL</small></div><table class="history-table"><tbody id="historyTableBody"></tbody></table></div>
 
-    <script>
-        // (V12 वाली पूरी स्क्रिप्ट यहाँ पेस्ट करें)
-        // ध्यान रखें कि STORAGE_KEY को 'khata_pro_v13' कर दें।
-    </script>
+<body>
+
+<button id="exitBtn" onclick="exitImmersive()">❌ Exit Mode</button>
+
+<div class="app-header">
+    <img src="icon.png" alt="K" class="app-logo" onerror="this.style.display='none'">
+    <h2>SMART READER PRO</h2>
+</div>
+
+<div id="toolbar">
+    <button class="btn-play" onclick="playText()">▶ PLAY</button>
+    <button onclick="pauseText()">⏸ PAUSE</button>
+    <button onclick="resumeText()">⏯ RESUME</button>
+    <button class="btn-stop" onclick="stopText()">⏹ STOP</button>
+    <button onclick="clearText()">🗑 CLEAR</button>
+    <button onclick="toggleDark()">🌙 MODE</button>
+    <button onclick="enterImmersive()">📖 IMMERSIVE</button>
+
+    <div style="margin-top: 10px;">
+        <span class="control-label">Speed:</span>
+        <input type="range" id="speedControl" min="0.5" max="2" step="0.1" value="1">
+        
+        <span class="control-label">Zoom:</span>
+        <input type="range" id="zoomControl" min="20" max="60" value="30" oninput="changeZoom()">
+    </div>
+</div>
+
+<textarea id="textInput" style="width:100%; height:120px; font-size:16px; padding:15px; box-sizing:border-box; background:#222; color:#ccc; border:none; border-bottom:1px solid #333;" placeholder="Paste your text here...">
+You will be surprised to find that in most situations there's nothing to deal with except your own fears and desires. Fear and desire make everything seem complicated.
+</textarea>
+
+<div id="textDisplay"></div>
+
+<script>
+    let synth = window.speechSynthesis;
+    let utter;
+    let sentences = [];
+    let index = 0;
+    let isPaused = false;
+
+    function getHindiVoice() {
+        let voices = synth.getVoices();
+        return voices.find(v => v.lang.toLowerCase().includes("hi")) || voices[0];
+    }
+
+    function splitSentences(text) {
+        let arr = text.match(/[^\.!\?]+[\.!\?]+/g);
+        return arr ? arr : [text];
+    }
+
+    function renderText() {
+        let text = document.getElementById("textInput").value.trim();
+        sentences = splitSentences(text);
+        let html = "";
+        sentences.forEach((s, i) => {
+            html += `<span class="sentence" onclick="startFrom(${i})">${s} </span>`;
+        });
+        document.getElementById("textDisplay").innerHTML = html;
+    }
+
+    function playText() {
+        stopText();
+        renderText();
+        index = 0;
+        speakSentence();
+    }
+
+    function startFrom(i) {
+        stopText();
+        index = i;
+        speakSentence();
+    }
+
+    function speakSentence() {
+        if (index >= sentences.length) return;
+
+        utter = new SpeechSynthesisUtterance(sentences[index]);
+        utter.rate = document.getElementById("speedControl").value;
+        let voice = getHindiVoice();
+        if (voice) utter.voice = voice;
+
+        highlightSentence();
+
+        utter.onend = function() {
+            if (!isPaused) {
+                index++;
+                speakSentence();
+            }
+        };
+        synth.speak(utter);
+    }
+
+    function highlightSentence() {
+        document.querySelectorAll(".sentence").forEach(el => el.classList.remove("highlight"));
+        let current = document.querySelectorAll(".sentence")[index];
+        if (current) {
+            current.classList.add("highlight");
+            current.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+    }
+
+    function pauseText() { if (synth.speaking) { synth.pause(); isPaused = true; } }
+    function resumeText() { if (synth.paused) { synth.resume(); isPaused = false; } }
+    function stopText() { synth.cancel(); isPaused = false; }
+    function clearText() { stopText(); document.getElementById("textInput").value = ""; document.getElementById("textDisplay").innerHTML = ""; }
+    function toggleDark() { document.body.classList.toggle("dark-mode"); }
+    function changeZoom() { document.getElementById("textDisplay").style.fontSize = document.getElementById("zoomControl").value + "px"; }
+    
+    function enterImmersive() {
+        document.body.classList.add("immersive");
+        if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+    }
+
+    function exitImmersive() {
+        document.body.classList.remove("immersive");
+        if (document.fullscreenElement) document.exitFullscreen();
+    }
+
+    // Ensure voices are loaded
+    window.speechSynthesis.onvoiceschanged = getHindiVoice;
+</script>
+
 </body>
 </html>
